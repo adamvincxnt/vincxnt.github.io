@@ -89,11 +89,14 @@
 
         <div class="category-filter">
             <button class="active" data-category="all">ทั้งหมด</button>
-            </div>
+            <!-- หมวดหมู่อื่นๆ จะถูกเพิ่มด้วย JavaScript -->
+        </div>
 
         <section class="product-grid" id="productGrid">
-            </section>
+            <!-- สินค้าจะถูกโหลดและแสดงผลที่นี่ -->
+        </section>
 
+        <!-- Modal สำหรับรายละเอียดสินค้าและฟอร์มสั่งซื้อ -->
         <div id="productModal" class="modal">
             <div class="modal-content">
                 <span class="close-button">&times;</span>
@@ -153,7 +156,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbx-cmnV3b-z-ClD1Xeu5Mg1BoiKhk7QkXVrsnxHCIGiuYAbS1gAyuH5Op81OrHyKjXjvg/exec'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
+        const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
         
         let allProducts = []; // เก็บสินค้าทั้งหมด
         let currentCategories = []; // เก็บหมวดหมู่ทั้งหมด
