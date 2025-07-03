@@ -9,7 +9,7 @@
         /* CSS ของคุณ */
         body { font-family: 'Kanit', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; color: white; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px); position: relative; } /* Added relative */
+        .header { text-align: center; color: white; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px); position: relative; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
         .nav-buttons button { padding: 10px 20px; border: none; border-radius: 8px; background-color: #f8f9fa; color: #6a0dad; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease; }
@@ -68,12 +68,16 @@
         .order-form-section input[type="email"],
         .order-form-section input[type="tel"],
         .order-form-section input[type="number"],
-        .order-form-section textarea {
+        .order-form-section input[type="date"], /* Added for payment date */
+        .order-form-section select, /* Added for bank selection */
+        .order-form-section textarea,
+        .order-form-section input[type="file"] { /* Added for file input */
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 1em;
+            box-sizing: border-box; /* Important for file input width */
         }
         .submit-btn { background-color: #28a745; color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 20px; transition: background-color 0.3s ease; }
         .submit-btn:hover { background-color: #218838; }
@@ -100,6 +104,59 @@
             border-color: #6a0dad;
         }
 
+        /* Payment Confirmation Section Styles */
+        #paymentConfirmationSection {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 30px auto;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        #paymentConfirmationSection h2 {
+            color: #28a745;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        #paymentConfirmationSection .bank-details {
+            border: 1px dashed #ccc;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            text-align: left;
+        }
+        #paymentConfirmationSection .bank-details p {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #555;
+        }
+        #paymentConfirmationSection .bank-details strong {
+            color: #333;
+        }
+        #paymentConfirmationSection .bank-details span {
+            font-weight: normal;
+        }
+        #paymentForm .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        #paymentForm label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        #paymentSlipPreview {
+            max-width: 150px;
+            max-height: 150px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            display: none;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -187,14 +244,74 @@
                 </div>
             </div>
         </div>
+
+        <div id="paymentConfirmationSection" style="display: none;">
+            <h2>ขั้นตอนต่อไป: ชำระเงิน</h2>
+            <p>กรุณาโอนเงินตามรายละเอียดด้านล่าง และแนบสลิปเพื่อยืนยันการชำระเงิน</p>
+            <p style="font-weight: bold;">หมายเลขคำสั่งซื้อของคุณ: <span id="paymentOrderIdDisplay" style="color: #6a0dad;"></span></p>
+
+            <div class="bank-details">
+                <p><strong>ธนาคาร:</strong> <span id="bankNameDisplay">ธนาคารกสิกรไทย</span></p>
+                <p><strong>ชื่อบัญชี:</strong> <span id="accountNameDisplay">ร้านเสื้อออนไลน์ จำกัด</span></p>
+                <p><strong>เลขที่บัญชี:</strong> <span id="accountNumberDisplay">XXX-X-XXXXX-X</span></p>
+                <p><strong>จำนวนเงินที่ต้องชำระ:</strong> <span id="amountToPayDisplay" style="color: #e74c3c; font-size: 1.2em;">0</span> บาท</p>
+            </div>
+
+            <h3>ยืนยันการชำระเงิน</h3>
+            <form id="paymentForm">
+                <input type="hidden" id="paymentConfirmOrderId">
+                <input type="hidden" id="paymentConfirmAmount">
+
+                <div class="form-group">
+                    <label for="payerName">ชื่อผู้โอน (ตามสลิป):</label>
+                    <input type="text" id="payerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="payerBank">โอนจากธนาคาร:</label>
+                    <select id="payerBank" required>
+                        <option value="">เลือกธนาคาร</option>
+                        <option value="กสิกรไทย">กสิกรไทย</option>
+                        <option value="ไทยพาณิชย์">ไทยพาณิชย์</option>
+                        <option value="กรุงไทย">กรุงไทย</option>
+                        <option value="กรุงเทพ">กรุงเทพ</option>
+                        <option value="ทหารไทยธนชาต">ทหารไทยธนชาต</option>
+                        <option value="ออมสิน">ออมสิน</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amountPaid">จำนวนเงินที่โอน:</label>
+                    <input type="number" id="amountPaid" step="0.01" required>
+                </div>
+                 <div class="form-group">
+                    <label for="paymentDate">วันที่และเวลาที่โอน:</label>
+                    <input type="date" id="paymentDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentSlip">แนบสลิปโอนเงิน (รูปภาพ):</label>
+                    <input type="file" id="paymentSlip" accept="image/*" required>
+                    <img id="paymentSlipPreview" src="#" alt="Payment Slip Preview">
+                </div>
+                
+                <button type="submit" class="submit-btn">ยืนยันการชำระเงิน</button>
+            </form>
+
+            <div class="loading" id="paymentLoading" style="display: none;">
+                <div class="spinner"></div>
+                <p>กำลังส่งข้อมูลการชำระเงิน...</p>
+            </div>
+            <p id="paymentMessage" style="text-align: center; margin-top: 15px;"></p>
+        </div>
+
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbz0nZwCNBGUxb6tfdF22ZNakeLH7-N4A7wLip0cz1HJzXwxAg5yMAZHZ-_lpOU07TL1nw/exec'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxq5RFZCPGn2nU7WSz4kB3X-q6QcxENxxw3A6azOM5pm802NJs32IYZ4cD2sb7cKl3T3A/exec'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
         
-        let allProducts = []; // เก็บสินค้าทั้งหมด
-        let currentCategories = []; // เก็บหมวดหมู่ทั้งหมด
-        let cart = []; // Global variable for the shopping cart
+        let allProducts = []; 
+        let currentCategories = []; 
+        let cart = []; 
+        let currentOrderId = ''; // เก็บ Order ID ที่เพิ่งสร้างสำเร็จ
 
         // Elements
         const productGrid = document.getElementById('productGrid');
@@ -213,7 +330,19 @@
         const checkoutMessage = document.getElementById('checkoutMessage');
         const categoryFilterDiv = document.querySelector('.category-filter');
 
-        let selectedProduct = null; // To hold the product being viewed in the detail modal
+        // New Elements for Payment Confirmation
+        const paymentConfirmationSection = document.getElementById('paymentConfirmationSection');
+        const paymentOrderIdDisplay = document.getElementById('paymentOrderIdDisplay');
+        const amountToPayDisplay = document.getElementById('amountToPayDisplay');
+        const paymentForm = document.getElementById('paymentForm');
+        const paymentConfirmOrderIdInput = document.getElementById('paymentConfirmOrderId');
+        const paymentConfirmAmountInput = document.getElementById('paymentConfirmAmount');
+        const paymentSlipInput = document.getElementById('paymentSlip');
+        const paymentSlipPreview = document.getElementById('paymentSlipPreview');
+        const paymentLoading = document.getElementById('paymentLoading');
+        const paymentMessage = document.getElementById('paymentMessage');
+
+        let selectedProduct = null; 
 
         // --- Initialization ---
         window.onload = function() {
@@ -249,8 +378,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    allProducts = data.products; // เก็บสินค้าทั้งหมด
-                    displayProducts(allProducts); // แสดงสินค้าทั้งหมดในตอนแรก
+                    allProducts = data.products; 
+                    displayProducts(allProducts); 
                 } else {
                     console.error('Error loading products:', data.error);
                     alert('ไม่สามารถโหลดสินค้าได้: ' + data.error);
@@ -263,7 +392,7 @@
 
         // --- Display Functions ---
         function displayCategoryFilters() {
-            categoryFilterDiv.innerHTML = '<button class="active" data-category="all">ทั้งหมด</button>'; // Reset filter
+            categoryFilterDiv.innerHTML = '<button class="active" data-category="all">ทั้งหมด</button>'; 
 
             currentCategories.forEach(cat => {
                 const button = document.createElement('button');
@@ -274,9 +403,7 @@
 
             categoryFilterDiv.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON') {
-                    // Remove active from all buttons
                     Array.from(categoryFilterDiv.children).forEach(btn => btn.classList.remove('active'));
-                    // Add active to clicked button
                     e.target.classList.add('active');
                     filterProducts(e.target.dataset.category);
                 }
@@ -291,7 +418,7 @@
         }
 
         function displayProducts(productsToDisplay) {
-            productGrid.innerHTML = ''; // เคลียร์ของเก่า
+            productGrid.innerHTML = ''; 
 
             if (productsToDisplay.length === 0) {
                 productGrid.innerHTML = '<p style="text-align: center; color: white; grid-column: 1 / -1;">ไม่พบสินค้าในหมวดหมู่นี้</p>';
@@ -314,7 +441,7 @@
 
         // --- Product Detail Modal ---
         function openProductDetailModal(product) {
-            selectedProduct = product; // Store the selected product
+            selectedProduct = product; 
             document.getElementById('modalProductImage').src = product.image;
             document.getElementById('modalProductName').textContent = product.name;
             document.getElementById('modalProductPrice').textContent = product.price;
@@ -322,8 +449,8 @@
             document.getElementById('modalProductStock').textContent = product.stock;
             document.getElementById('modalProductDescription').textContent = product.description;
             
-            modalQuantityInput.value = 1; // Reset quantity to 1
-            modalQuantityInput.max = product.stock; // Set max quantity based on stock
+            modalQuantityInput.value = 1; 
+            modalQuantityInput.max = product.stock; 
 
             productDetailModal.style.display = 'flex';
         }
@@ -372,22 +499,19 @@
                 return;
             }
 
-            // Check if product is already in cart
             const existingItemIndex = cart.findIndex(item => item.id === selectedProduct.id);
 
             if (existingItemIndex > -1) {
-                // Update quantity if already in cart
                 cart[existingItemIndex].quantity += quantity;
             } else {
-                // Add new item to cart
                 cart.push({
                     id: selectedProduct.id,
                     name: selectedProduct.name,
                     price: selectedProduct.price,
                     image: selectedProduct.image,
-                    stock: selectedProduct.stock, // Include stock for future validation
+                    stock: selectedProduct.stock, 
                     quantity: quantity,
-                    size: selectedProduct.size, // Pass size and color
+                    size: selectedProduct.size, 
                     color: selectedProduct.color
                 });
             }
@@ -395,7 +519,7 @@
             saveCartToLocalStorage();
             updateCartCount();
             alert(`${quantity} ชิ้นของ ${selectedProduct.name} ถูกเพิ่มลงในตะกร้าแล้ว!`);
-            productDetailModal.style.display = 'none'; // Close modal after adding to cart
+            productDetailModal.style.display = 'none'; 
         });
 
         cartIcon.addEventListener('click', () => {
@@ -408,7 +532,7 @@
         });
 
         function displayCartItems() {
-            cartItemsList.innerHTML = ''; // Clear existing items
+            cartItemsList.innerHTML = ''; 
             let totalCartPrice = 0;
 
             if (cart.length === 0) {
@@ -443,10 +567,10 @@
             cartItemsList.querySelectorAll('.remove-item-button').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const itemIdToRemove = e.target.dataset.id;
-                    cart = cart.filter(item => item.id != itemIdToRemove); // Filter out the item
+                    cart = cart.filter(item => item.id != itemIdToRemove); 
                     saveCartToLocalStorage();
                     updateCartCount();
-                    displayCartItems(); // Re-render cart
+                    displayCartItems(); 
                 });
             });
         }
@@ -460,8 +584,9 @@
                 return;
             }
 
-            checkoutLoading.style.display = 'block'; // Show spinner
-            checkoutMessage.textContent = ''; // Clear previous messages
+            checkoutLoading.style.display = 'block'; 
+            checkoutMessage.textContent = ''; 
+            document.querySelector('#checkoutForm button[type="submit"]').disabled = true; // Disable button
 
             const customerName = document.getElementById('checkoutCustomerName').value;
             const phone = document.getElementById('checkoutPhone').value;
@@ -477,15 +602,14 @@
                 address: address,
                 note: note,
                 total: total,
-                cartItems: cart // Send the entire cart array
+                cartItems: cart 
             };
 
             try {
-                // Use POST with JSON body for complex data like arrays
                 const response = await fetch(`${API_URL}?action=createOrder`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json' // Important!
+                        'Content-Type': 'application/json' 
                     },
                     body: JSON.stringify(orderData)
                 });
@@ -494,14 +618,25 @@
                 if (data.success) {
                     checkoutMessage.textContent = `สั่งซื้อสำเร็จ! หมายเลขคำสั่งซื้อ: ${data.orderId}`;
                     checkoutMessage.style.color = 'green';
+                    
+                    currentOrderId = data.orderId; // Store the new order ID
+                    
                     cart = []; // Clear cart after successful order
                     saveCartToLocalStorage();
                     updateCartCount();
                     checkoutForm.reset(); // Clear form
-                    // Optionally close cart modal after a short delay
-                    setTimeout(() => {
-                        cartModal.style.display = 'none';
-                    }, 3000); 
+
+                    // --- Show Payment Confirmation Section ---
+                    cartModal.style.display = 'none'; // Close cart modal
+                    productGrid.style.display = 'none'; // Hide product grid
+                    categoryFilterDiv.style.display = 'none'; // Hide category filters
+
+                    paymentOrderIdDisplay.textContent = currentOrderId;
+                    amountToPayDisplay.textContent = total.toFixed(0);
+                    paymentConfirmOrderIdInput.value = currentOrderId;
+                    paymentConfirmAmountInput.value = total.toFixed(2); // Pass exact total
+                    paymentConfirmationSection.style.display = 'block'; // Show payment section
+
                 } else {
                     checkoutMessage.textContent = 'เกิดข้อผิดพลาดในการสั่งซื้อ: ' + data.error;
                     checkoutMessage.style.color = 'red';
@@ -511,7 +646,111 @@
                 checkoutMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
                 checkoutMessage.style.color = 'red';
             } finally {
-                checkoutLoading.style.display = 'none'; // Hide spinner
+                checkoutLoading.style.display = 'none'; 
+                document.querySelector('#checkoutForm button[type="submit"]').disabled = false; // Re-enable button
+            }
+        });
+
+        // --- Payment Confirmation Form Submission ---
+        paymentForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            paymentLoading.style.display = 'block';
+            paymentMessage.textContent = '';
+            document.querySelector('#paymentForm button[type="submit"]').disabled = true;
+
+            const orderId = document.getElementById('paymentConfirmOrderId').value;
+            const payerName = document.getElementById('payerName').value;
+            const payerBank = document.getElementById('payerBank').value;
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+            const paymentDate = document.getElementById('paymentDate').value; // YYYY-MM-DD
+            const paymentSlipFile = document.getElementById('paymentSlip').files[0];
+
+            if (!paymentSlipFile) {
+                alert('โปรดแนบรูปสลิปโอนเงิน');
+                paymentLoading.style.display = 'none';
+                document.querySelector('#paymentForm button[type="submit"]').disabled = false;
+                return;
+            }
+
+            // Read file as Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(paymentSlipFile);
+
+            reader.onloadend = async () => {
+                const slipBase64 = reader.result; // data:image/png;base64,...
+                const slipMimeType = paymentSlipFile.type;
+
+                const paymentData = {
+                    orderId: orderId,
+                    payerName: payerName,
+                    payerBank: payerBank,
+                    amountPaid: amountPaid,
+                    paymentDate: paymentDate,
+                    slipBase64: slipBase64,
+                    slipMimeType: slipMimeType
+                };
+
+                try {
+                    const response = await fetch(`${API_URL}?action=confirmPayment`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(paymentData)
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        paymentMessage.textContent = 'ยืนยันการชำระเงินสำเร็จ! กำลังรอการตรวจสอบ';
+                        paymentMessage.style.color = 'green';
+                        paymentForm.reset();
+                        paymentSlipPreview.style.display = 'none'; // Hide preview
+                        paymentSlipPreview.src = '#';
+                        
+                        // Optionally hide payment section after a delay
+                        setTimeout(() => {
+                            paymentConfirmationSection.style.display = 'none';
+                            productGrid.style.display = 'grid'; // Show products again
+                            categoryFilterDiv.style.display = 'block'; // Show category filters again
+                        }, 5000);
+
+                    } else {
+                        paymentMessage.textContent = 'เกิดข้อผิดพลาดในการยืนยันการชำระเงิน: ' + data.error;
+                        paymentMessage.style.color = 'red';
+                    }
+                } catch (error) {
+                    console.error('Network error during payment confirmation:', error);
+                    paymentMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
+                    paymentMessage.style.color = 'red';
+                } finally {
+                    paymentLoading.style.display = 'none';
+                    document.querySelector('#paymentForm button[type="submit"]').disabled = false;
+                }
+            };
+
+            reader.onerror = (error) => {
+                console.error('Error reading file:', error);
+                paymentMessage.textContent = 'ไม่สามารถอ่านไฟล์สลิปได้';
+                paymentMessage.style.color = 'red';
+                paymentLoading.style.display = 'none';
+                document.querySelector('#paymentForm button[type="submit"]').disabled = false;
+            };
+        });
+
+        // Preview payment slip image
+        paymentSlipInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    paymentSlipPreview.src = e.target.result;
+                    paymentSlipPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                paymentSlipPreview.src = '#';
+                paymentSlipPreview.style.display = 'none';
             }
         });
     </script>
