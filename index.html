@@ -3,61 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ร้านขายเสื้อออนไลน์</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://js.stripe.com/v3/"></script>
+  <title>ร้านเสื้อ VINCXNT</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    input, select, button { display: block; width: 100%; padding: 10px; margin-bottom: 1rem; font-size: 1rem; }
+    img.qr { max-width: 200px; display: block; margin: 1rem auto; }
+  </style>
 </head>
-<body class="bg-gray-100">
-  <!-- Navbar -->
-  <nav class="bg-blue-600 text-white p-4">
-    <div class="container mx-auto flex justify-between">
-      <h1 class="text-2xl font-bold">ร้านเสื้อสุดชะนี</h1>
-      <a href="admin.html" class="text-lg">แอดมิน</a>
-    </div>
-  </nav>
+<body>
+  <h1>ร้านเสื้อ VINCXNT</h1>
+  <form id="orderForm">
+    <label>ชื่อผู้สั่งซื้อ</label>
+    <input type="text" name="name" required>
 
-  <!-- Product Section -->
-  <div class="container mx-auto py-8">
-    <h2 class="text-3xl font-bold text-center mb-8">สินค้าของเรา</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <!-- Product Card -->
-      <div class="bg-white p-4 rounded-lg shadow-md">
-        <img src="https://via.placeholder.com/150" alt="เสื้อตัวที่ 1" class="w-full h-48 object-cover rounded">
-        <h3 class="text-xl font-semibold mt-2">เสื้อตัวที่ 1</h3>
-        <p class="text-gray-600">ราคา: ฿350</p>
-        <button onclick="buyProduct('shirt1', 350)" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">สั่งซื้อ</button>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-md">
-        <img src="https://via.placeholder.com/150" alt="เสื้อตัวที่ 2" class="w-full h-48 object-cover rounded">
-        <h3 class="text-xl font-semibold mt-2">เสื้อตัวที่ 2</h3>
-        <p class="text-gray-600">ราคา: ฿400</p>
-        <button onclick="buyProduct('shirt2', 400)" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">สั่งซื้อ</button>
-      </div>
-    </div>
-  </div>
+    <label>ที่อยู่จัดส่ง</label>
+    <input type="text" name="address" required>
+
+    <label>เบอร์โทร</label>
+    <input type="tel" name="phone" required>
+
+    <label>เลือกสินค้า</label>
+    <select name="product">
+      <option value="VINCXNT Oversized T-shirt - M">เสื้อ VINCXNT ไซส์ M</option>
+      <option value="VINCXNT Oversized T-shirt - L">เสื้อ VINCXNT ไซส์ L</option>
+      <option value="VINCXNT Oversized T-shirt - XL">เสื้อ VINCXNT ไซส์ XL</option>
+    </select>
+
+    <label>จำนวน</label>
+    <input type="number" name="quantity" value="1" min="1" required>
+
+    <h3>📲 ชำระเงินผ่าน QR พร้อมเพย์</h3>
+    <img class="qr" src="https://your-qr-code-url.com/qr.png" alt="พร้อมเพย์ QR Code">
+
+    <button type="submit">ส่งออเดอร์</button>
+  </form>
+
+  <p id="status"></p>
 
   <script>
-    const stripe = Stripe('your_stripe_publishable_key'); // แทนที่ด้วย Stripe Publishable Key
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwY3eV4wF6k6Ij_bKoXVPlURto2OlK1i-y5sE3S6_71eF30hlR2ZvwWygjRpdfSijS1/exec';
+    const form = document.getElementById('orderForm');
+    const status = document.getElementById('status');
 
-    async function buyProduct(productName, price) {
-      try {
-        // ส่งคำสั่งซื้อไปยัง Google Apps Script
-        const response = await fetch('your_google_apps_script_url', { // แทนที่ด้วย URL จาก Google Apps Script
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productName, price, date: new Date().toISOString() })
-        });
-        const data = await response.json();
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      status.textContent = 'กำลังส่งข้อมูล...';
 
-        // เปลี่ยนเส้นทางไปยัง Stripe Checkout
-        stripe.redirectToCheckout({
-          sessionId: data.sessionId
+      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+        .then(response => {
+          status.textContent = 'ส่งออเดอร์เรียบร้อยแล้ว! กรุณาชำระเงินตาม QR ด้านบน';
+          form.reset();
+        })
+        .catch(error => {
+          status.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
         });
-      } catch (error) {
-        console.error('Error:', error);
-        alert('เกิดข้อผิดพลาดในการสั่งซื้อ');
-      }
-    }
+    });
   </script>
 </body>
 </html>
