@@ -1,0 +1,484 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ VINCXNT - ร้านขายเสื้อออนไลน์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; width: 90%; max-width: 500px; border-radius: 8px; }
+        .cart-count { position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; }
+        .loading { text-align: center; padding: 20px; }
+        .error { color: red; text-align: center; padding: 10px; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9hhpYYEVe9KzRxS7KclGZwQn82QZIaMs",
+            authDomain: "primeval-pixel-270616.firebaseapp.com",
+            projectId: "primeval-pixel-270616",
+            storageBucket: "primeval-pixel-270616.appspot.com",
+            messagingSenderId: "611613434861",
+            appId: "1:611613434861:web:e18b6fa7f50f66e8097de4",
+            measurementId: "G-Y6SSJM41F9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+    </script>
+
+    <!-- Header -->
+    <header class="bg-black text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">⚡ VINCXNT</h1>
+            <nav>
+                <a href="#shop" class="mx-2">🛍️ ร้านค้า</a>
+                <a href="#admin" class="mx-2">⚙️ ระบบหลังบ้าน</a>
+            </nav>
+            <div class="relative">
+                <button onclick="openCart()" class="text-xl">🛒</button>
+                <span id="cart-count" class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Shop Section -->
+    <section id="shop" class="container mx-auto p-4">
+        <h2 class="text-3xl font-bold text-center mb-4">🔥 STREETWEAR COLLECTION</h2>
+        <p class="text-center mb-6">AUTHENTIC URBAN FASHION • PREMIUM QUALITY • LIMITED EDITION</p>
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="loading">กำลังโหลด...</div>
+        </div>
+    </section>
+
+    <!-- Admin Section -->
+    <section id="admin" class="container mx-auto p-4 hidden">
+        <h2 class="text-3xl font-bold mb-4">📊 ADMIN DASHBOARD</h2>
+        
+        <!-- Admin Login -->
+        <div id="admin-login" class="bg-white p-6 rounded shadow">
+            <h3 class="text-xl mb-4">🔐 เข้าสู่ระบบแอดมิน</h3>
+            <div class="mb-4">
+                <label>อีเมล:</label>
+                <input id="admin-email" type="email" class="border p-2 w-full" placeholder="admin@vincxnt.com">
+            </div>
+            <div class="mb-4">
+                <label>รหัสผ่าน:</label>
+                <input id="admin-password" type="password" class="border p-2 w-full" placeholder="รหัสผ่าน">
+            </div>
+            <button onclick="adminLogin()" class="bg-blue-500 text-white p-2 rounded w-full">เข้าสู่ระบบ</button>
+            <p class="mt-2 text-sm">ตัวอย่าง: admin@vincxnt.com / password123</p>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded shadow text-center">
+                    <p id="total-orders">0</p>
+                    <p>คำสั่งซื้อทั้งหมด</p>
+                </div>
+                <div class="bg-white p-4 rounded shadow text-center">
+                    <p id="total-sales">0</p>
+                    <p>ยอดขายรวม (บาท)</p>
+                </div>
+                <div class="bg-white p-4 rounded shadow text-center">
+                    <p id="total-products">0</p>
+                    <p>สินค้าทั้งหมด</p>
+                </div>
+                <div class="bg-white p-4 rounded shadow text-center">
+                    <p id="pending-payments">0</p>
+                    <p>รอการชำระเงิน</p>
+                </div>
+            </div>
+
+            <!-- Add Product -->
+            <h3 class="text-xl mb-4">📋 เพิ่มสินค้า</h3>
+            <form id="add-product-form" class="bg-white p-6 rounded shadow mb-6">
+                <input type="text" name="name" placeholder="ชื่อสินค้า" class="border p-2 w-full mb-2" required>
+                <input type="number" name="price" placeholder="ราคา (บาท)" class="border p-2 w-full mb-2" required>
+                <input type="text" name="image" placeholder="URL รูปภาพ (เช่น Imgur)" class="border p-2 w-full mb-2" required>
+                <button type="submit" class="bg-green-500 text-white p-2 rounded w-full">เพิ่มสินค้า</button>
+            </form>
+
+            <!-- Manage Orders -->
+            <h3 class="text-xl mb-4">📋 จัดการคำสั่งซื้อ</h3>
+            <table class="w-full bg-white rounded shadow">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2">รหัสสั่งซื้อ</th>
+                        <th class="p-2">ลูกค้า</th>
+                        <th class="p-2">สินค้า</th>
+                        <th class="p-2">ยอดรวม</th>
+                        <th class="p-2">สถานะ</th>
+                        <th class="p-2">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="order-list"></tbody>
+            </table>
+            <button onclick="adminLogout()" class="bg-red-500 text-white p-2 rounded mt-4">ออกจากระบบ</button>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeCart()" class="float-right text-xl cursor-pointer">×</span>
+            <h2 class="text-2xl mb-4">🛒 ตะกร้าสินค้า</h2>
+            <div id="cart-items" class="mb-4"></div>
+            <p class="text-lg font-bold">รวม: <span id="cart-total">0</span> บาท</p>
+            <button onclick="openOrderForm()" class="bg-blue-500 text-white p-2 rounded w-full mt-4">สั่งซื้อเลย</button>
+        </div>
+    </div>
+
+    <!-- Order Form Modal -->
+    <div id="order-form-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeOrderForm()" class="float-right text-xl cursor-pointer">×</span>
+            <h2 class="text-2xl mb-4">📝 ข้อมูลการสั่งซื้อ</h2>
+            <form id="order-form">
+                <div class="mb-4">
+                    <label>ชื่อ-นามสกุล:</label>
+                    <input type="text" name="customerName" class="border p-2 w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label>เบอร์โทร:</label>
+                    <input type="tel" name="phone" class="border p-2 w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label>ที่อยู่จัดส่ง:</label>
+                    <textarea name="address" class="border p-2 w-full" required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label>วิธีการชำระเงิน:</label>
+                    <select name="paymentMethod" class="border p-2 w-full" onchange="togglePaymentMethod(this)">
+                        <option value="qr">QR Code</option>
+                        <option value="transfer">โอนเงิน</option>
+                        <option value="cod">เก็บเงินปลายทาง</option>
+                    </select>
+                </div>
+                <button type="submit" class="bg-green-500 text-white p-2 rounded w-full">ยืนยันคำสั่งซื้อ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span onclick="closePayment()" class="float-right text-xl cursor-pointer">×</span>
+            <h2 class="text-2xl mb-4">💳 ชำระเงิน</h2>
+            <div id="payment-details" class="text-center">
+                <p class="mb-4">📱 สแกน QR Code เพื่อชำระเงิน</p>
+                <p class="mb-4">จำนวนเงิน: <span id="payment-amount">0</span> บาท</p>
+                <img id="qr-code" src="YOUR_QR_CODE_URL" alt="QR Code" class="mx-auto mb-4" style="max-width: 200px;">
+                <p class="text-sm">*QR Code สำหรับการชำระเงิน</p>
+            </div>
+            <button onclick="confirmPayment()" class="bg-green-500 text-white p-2 rounded w-full mt-4">✅ ยืนยันการชำระเงิน</button>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let isAdmin = false;
+
+        // Firebase: Load Products
+        async function loadProducts() {
+            const productList = document.getElementById('product-list');
+            try {
+                productList.innerHTML = '<div class="loading">กำลังโหลด...</div>';
+                const snapshot = await db.collection('products').get();
+                productList.innerHTML = '';
+                if (snapshot.empty) {
+                    productList.innerHTML = '<p class="error">ไม่มีสินค้าในร้าน</p>';
+                    return;
+                }
+                let totalProducts = 0;
+                snapshot.forEach(doc => {
+                    const product = { id: doc.id, ...doc.data() };
+                    totalProducts++;
+                    productList.innerHTML += `
+                        <div class="bg-white p-4 rounded shadow">
+                            <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover mb-2" onerror="this.src='https://via.placeholder.com/150';">
+                            <h3 class="text-lg font-bold">${product.name}</h3>
+                            <p>${product.price} บาท</p>
+                            <button onclick="addToCart('${product.id}', '${product.name}', ${product.price}, '${product.image}')" class="bg-green-500 text-white p-2 rounded w-full mt-2">เพิ่มลงตะกร้า</button>
+                        </div>
+                    `;
+                });
+                document.getElementById('total-products').innerText = totalProducts;
+            } catch (error) {
+                productList.innerHTML = `<p class="error">เกิดข้อผิดพลาดในการโหลดสินค้า: ${error.message}</p>`;
+            }
+        }
+
+        // Cart Functions
+        function addToCart(id, name, price, image) {
+            cart.push({ id, name, price, image });
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+            cartItems.innerHTML = '';
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price;
+                cartItems.innerHTML += `
+                    <div class="flex justify-between mb-2">
+                        <span>${item.name} - ${item.price} บาท</span>
+                        <button onclick="removeFromCart(${index})" class="bg-red-500 text-white p-1 rounded">ลบ</button>
+                    </div>
+                `;
+            });
+            cartCount.innerText = cart.length;
+            cartTotal.innerText = total;
+            document.getElementById('payment-amount').innerText = total;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
+        function openCart() {
+            if (cart.length === 0) {
+                alert('ตะกร้าว่างเปล่า!');
+                return;
+            }
+            document.getElementById('cart-modal').style.display = 'block';
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        // Order Form
+        function openOrderForm() {
+            if (cart.length === 0) {
+                alert('ตะกร้าว่างเปล่า!');
+                return;
+            }
+            closeCart();
+            document.getElementById('order-form-modal').style.display = 'block';
+        }
+
+        function closeOrderForm() {
+            document.getElementById('order-form-modal').style.display = 'none';
+        }
+
+        // Payment
+        function togglePaymentMethod(select) {
+            const paymentModal = document.getElementById('payment-details');
+            const total = document.getElementById('cart-total').innerText;
+            if (select.value === 'qr') {
+                paymentModal.innerHTML = `
+                    <p class="mb-4">📱 สแกน QR Code เพื่อชำระเงิน</p>
+                    <p class="mb-4">จำนวนเงิน: <span id="payment-amount">${total}</span> บาท</p>
+                    <img id="qr-code" src="YOUR_QR_CODE_URL" alt="QR Code" class="mx-auto mb-4" style="max-width: 200px;" onerror="this.src='https://via.placeholder.com/150';">
+                    <p class="text-sm">*QR Code สำหรับการชำระเงิน</p>
+                `;
+            } else if (select.value === 'transfer') {
+                paymentModal.innerHTML = `<p class="mb-4">กรุณาโอนเงินไปยังบัญชี: ธนาคาร XXX เลขที่ XXX-XXX-XXX</p>`;
+            } else {
+                paymentModal.innerHTML = `<p class="mb-4">ชำระเงินเมื่อได้รับสินค้า</p>`;
+            }
+        }
+
+        function openPayment() {
+            closeOrderForm();
+            document.getElementById('payment-modal').style.display = 'block';
+        }
+
+        function closePayment() {
+            document.getElementById('payment-modal').style.display = 'none';
+        }
+
+        async function confirmPayment() {
+            try {
+                const order = {
+                    customerName: document.querySelector('#order-form [name="customerName"]').value,
+                    phone: document.querySelector('#order-form [name="phone"]').value,
+                    address: document.querySelector('#order-form [name="address"]').value,
+                    paymentMethod: document.querySelector('#order-form [name="paymentMethod"]').value,
+                    items: cart,
+                    total: parseFloat(document.getElementById('cart-total').innerText),
+                    status: 'pending',
+                    createdAt: new Date()
+                };
+                await db.collection('orders').add(order);
+                alert('คำสั่งซื้อสำเร็จ!');
+                cart = [];
+                updateCart();
+                closePayment();
+                if (isAdmin) loadOrders();
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการบันทึกคำสั่งซื้อ: ' + error.message);
+            }
+        }
+
+        // Admin Functions
+        async function adminLogin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                isAdmin = true;
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                document.getElementById('admin').classList.remove('hidden');
+                document.getElementById('shop').classList.add('hidden');
+                loadOrders();
+            } catch (error) {
+                alert('ชื่อผู้ใช้หรือรหัสผ่านผิด: ' + error.message);
+            }
+        }
+
+        async function adminLogout() {
+            try {
+                await auth.signOut();
+                isAdmin = false;
+                document.getElementById('admin-login').classList.remove('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('admin').classList.add('hidden');
+                document.getElementById('shop').classList.remove('hidden');
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการออกจากระบบ: ' + error.message);
+            }
+        }
+
+        // Load Orders
+        async function loadOrders() {
+            const orderList = document.getElementById('order-list');
+            try {
+                orderList.innerHTML = '<div class="loading">กำลังโหลด...</div>';
+                const snapshot = await db.collection('orders').get();
+                orderList.innerHTML = '';
+                if (snapshot.empty) {
+                    orderList.innerHTML = '<tr><td colspan="6" class="p-2 text-center">ไม่มีคำสั่งซื้อ</td></tr>';
+                    return;
+                }
+                let totalOrders = 0;
+                let totalSales = 0;
+                let pendingPayments = 0;
+                snapshot.forEach(doc => {
+                    const order = { id: doc.id, ...doc.data() };
+                    totalOrders++;
+                    totalSales += order.total;
+                    if (order.status === 'pending') pendingPayments++;
+                    orderList.innerHTML += `
+                        <tr>
+                            <td class="p-2">${order.id}</td>
+                            <td class="p-2">${order.customerName}</td>
+                            <td class="p-2">${order.items.map(item => item.name).join(', ')}</td>
+                            <td class="p-2">${order.total} บาท</td>
+                            <td class="p-2">${order.status}</td>
+                            <td class="p-2">
+                                <button onclick="updateOrderStatus('${order.id}', 'completed')" class="bg-green-500 text-white p-1 rounded">สำเร็จ</button>
+                                <button onclick="updateOrderStatus('${order.id}', 'cancelled')" class="bg-red-500 text-white p-1 rounded">ยกเลิก</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('total-orders').innerText = totalOrders;
+                document.getElementById('total-sales').innerText = totalSales;
+                document.getElementById('pending-payments').innerText = pendingPayments;
+            } catch (error) {
+                orderList.innerHTML = `<tr><td colspan="6" class="p-2 error">เกิดข้อผิดพลาดในการโหลดคำสั่งซื้อ: ${error.message}</td></tr>`;
+            }
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            try {
+                await db.collection('orders').doc(orderId).update({ status });
+                loadOrders();
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + error.message);
+            }
+        }
+
+        // Add Product
+        document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const product = {
+                    name: e.target.name.value,
+                    price: parseFloat(e.target.price.value),
+                    image: e.target.image.value
+                };
+                await db.collection('products').add(product);
+                alert('เพิ่มสินค้าสำเร็จ!');
+                e.target.reset();
+                loadProducts();
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า: ' + error.message);
+            }
+        });
+
+        // Order Form Submission
+        document.getElementById('order-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            openPayment();
+        });
+
+        // Initialize
+        loadProducts();
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                isAdmin = true;
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                document.getElementById('admin').classList.remove('hidden');
+                document.getElementById('shop').classList.add('hidden');
+                loadOrders();
+            }
+        });
+    </script>
+</body>
+</html>
