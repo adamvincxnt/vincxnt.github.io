@@ -74,6 +74,7 @@
     <div class="main-content">
         <h1>Dashboard</h1>
 
+        <!-- Section for Product Management -->
         <div id="productsSection" class="section-container">
             <h2>จัดการสินค้า</h2>
             <div class="action-buttons">
@@ -93,7 +94,8 @@
                     <div class="form-group">
                         <label for="productCategory">หมวดหมู่:</label>
                         <select id="productCategory" required>
-                            </select>
+                            <!-- Options populated by JS from getCategories() -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="productImage">URL รูปภาพ:</label>
@@ -134,10 +136,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                    <!-- Product data will be loaded here by JavaScript -->
+                </tbody>
             </table>
         </div>
 
+        <!-- Section for Category Management -->
         <div id="categoriesSection" class="section-container">
             <h2>จัดการหมวดหมู่</h2>
             <div class="action-buttons">
@@ -166,10 +170,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                    <!-- Category data will be loaded here by JavaScript -->
+                </tbody>
             </table>
         </div>
 
+        <!-- Section for Order Management -->
         <div id="ordersSection" class="section-container">
             <h2>จัดการคำสั่งซื้อ</h2>
             <table id="ordersTable">
@@ -186,12 +192,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                    <!-- Order data will be loaded here by JavaScript -->
+                </tbody>
             </table>
             <div id="orderMessage" class="message"></div>
         </div>
     </div>
 
+    <!-- Inactivity Overlay -->
     <div class="inactivity-overlay" id="inactivityOverlay">
         <p>คุณไม่มีกิจกรรมเกิน 1 ชั่วโมง ระบบจะออกจากระบบในไม่ช้า<br>คลิกที่ใดก็ได้เพื่อกลับสู่ระบบ</p>
     </div>
