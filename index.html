@@ -1,39 +1,88 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ร้านเสื้อ VINCXNT</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
-    input, select, button { display: block; width: 100%; padding: 10px; margin-bottom: 1rem; font-size: 1rem; }
-    img.qr { max-width: 200px; display: block; margin: 1rem auto; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+    input,
+    select,
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    img.qr {
+      display: block;
+      margin: 0 auto 1rem auto;
+      max-width: 200px;
+    }
+    #status {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
   <h1>ร้านเสื้อ VINCXNT</h1>
+
   <form id="orderForm">
-    <label>ชื่อผู้สั่งซื้อ</label>
-    <input type="text" name="name" required>
+    <label for="name">ชื่อผู้สั่งซื้อ</label>
+    <input type="text" name="name" id="name" required />
 
-    <label>ที่อยู่จัดส่ง</label>
-    <input type="text" name="address" required>
+    <label for="address">ที่อยู่จัดส่ง</label>
+    <input type="text" name="address" id="address" required />
 
-    <label>เบอร์โทร</label>
-    <input type="tel" name="phone" required>
+    <label for="phone">เบอร์โทร</label>
+    <input type="tel" name="phone" id="phone" required />
 
-    <label>เลือกสินค้า</label>
-    <select name="product">
+    <label for="product">เลือกสินค้า</label>
+    <select name="product" id="product">
       <option value="VINCXNT Oversized T-shirt - M">เสื้อ VINCXNT ไซส์ M</option>
       <option value="VINCXNT Oversized T-shirt - L">เสื้อ VINCXNT ไซส์ L</option>
       <option value="VINCXNT Oversized T-shirt - XL">เสื้อ VINCXNT ไซส์ XL</option>
     </select>
 
-    <label>จำนวน</label>
-    <input type="number" name="quantity" value="1" min="1" required>
+    <label for="quantity">จำนวน</label>
+    <input type="number" name="quantity" id="quantity" min="1" value="1" required />
 
     <h3>📲 ชำระเงินผ่าน QR พร้อมเพย์</h3>
-    <img class="qr" src="https://your-qr-code-url.com/qr.png" alt="พร้อมเพย์ QR Code">
+    <img
+      class="qr"
+      src="https://i.ibb.co/zVHK2RX/promptpay-qr-example.png"
+      alt="พร้อมเพย์ QR Code"
+    />
 
     <button type="submit">ส่งออเดอร์</button>
   </form>
@@ -41,21 +90,30 @@
   <p id="status"></p>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwY3eV4wF6k6Ij_bKoXVPlURto2OlK1i-y5sE3S6_71eF30hlR2ZvwWygjRpdfSijS1/exec';
+    const scriptURL = 'https://script.google.com/macros/library/d/1BmfMs8y72okqdImQl7uSBl4ptyIE8coC5-raC1V-oqk_uEr3v4FOu28z/1'; // เปลี่ยน YOUR_SCRIPT_ID ให้ตรงกับของคุณ
     const form = document.getElementById('orderForm');
     const status = document.getElementById('status');
 
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       status.textContent = 'กำลังส่งข้อมูล...';
 
       fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-        .then(response => {
-          status.textContent = 'ส่งออเดอร์เรียบร้อยแล้ว! กรุณาชำระเงินตาม QR ด้านบน';
-          form.reset();
+        .then((response) => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.text();
         })
-        .catch(error => {
+        .then((text) => {
+          if (text === 'success') {
+            status.textContent = 'ส่งออเดอร์เรียบร้อย! กรุณาชำระเงินตาม QR ด้านบน';
+            form.reset();
+          } else {
+            status.textContent = 'เกิดข้อผิดพลาดในการส่งข้อมูล';
+          }
+        })
+        .catch((error) => {
           status.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+          console.error('Error:', error);
         });
     });
   </script>
