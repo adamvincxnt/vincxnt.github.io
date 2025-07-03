@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Basic CSS for admin panel */
+        body { font-family: 'Kanit', sans-serif; background-color: #f4f7f6; margin: 0; display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .sidebar h2 { text-align: center; margin-bottom: 30px; color: #ecf0f1; }
+        .sidebar nav button { display: block; width: 100%; padding: 15px 10px; margin-bottom: 10px; background: none; border: none; color: white; text-align: left; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s ease; border-radius: 5px; }
+        .sidebar nav button:hover, .sidebar nav button.active { background-color: #34495e; }
+        .sidebar .logout-button { background-color: #e74c3c; margin-top: auto; } /* Push to bottom */
+        .sidebar .logout-button:hover { background-color: #c0392b; }
+
+        .main-content { flex-grow: 1; padding: 30px; background-color: #ecf0f1; }
+        .main-content h1 { color: #2c3e50; margin-bottom: 20px; }
+        .section-container { background-color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 30px; }
+        .section-container h2 { color: #34495e; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .action-buttons { margin-bottom: 20px; }
+        .action-buttons button { padding: 10px 20px; margin-right: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; }
+        .action-buttons .add-button { background-color: #2ecc71; color: white; }
+        .action-buttons .add-button:hover { background-color: #27ae60; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table th, table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        table th { background-color: #f0f0f0; color: #333; }
+        table tr:nth-child(even) { background-color: #f9f9f9; }
+        table button { padding: 8px 12px; margin-right: 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
+        table .edit-button { background-color: #3498db; color: white; }
+        table .delete-button { background-color: #e74c3c; color: white; }
+        table .edit-button:hover { background-color: #2980b9; }
+        table .delete-button:hover { background-color: #c0392b; }
+        table .status-select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+
+        .form-container { margin-top: 20px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background-color: #fafafa; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="email"],
+        .form-group input[type="url"],
+        .form-group textarea,
+        .form-group select { width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; }
+        .form-buttons { margin-top: 20px; text-align: right; }
+        .form-buttons button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; margin-left: 10px; }
+        .form-buttons .save-button { background-color: #2ecc71; color: white; }
+        .form-buttons .cancel-button { background-color: #95a5a6; color: white; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 5px; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* Inactivity overlay */
+        .inactivity-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center; color: white; font-size: 1.5em; text-align: center; }
+        .inactivity-overlay p { padding: 20px; background-color: rgba(0,0,0,0.8); border-radius: 10px; }
+
+        /* Hide sections initially */
+        #productsSection, #categoriesSection, #ordersSection { display: none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <nav>
+            <button id="navProducts">จัดการสินค้า</button>
+            <button id="navCategories">จัดการหมวดหมู่</button>
+            <button id="navOrders">จัดการคำสั่งซื้อ</button>
+            <button class="logout-button" id="logoutButton">ออกจากระบบ</button>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <h1>Dashboard</h1>
+
+        <div id="productsSection" class="section-container">
+            <h2>จัดการสินค้า</h2>
+            <div class="action-buttons">
+                <button class="add-button" id="addProductBtn">เพิ่มสินค้าใหม่</button>
+            </div>
+            <div id="productFormContainer" class="form-container" style="display:none;">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <div class="form-group">
+                        <label for="productName">ชื่อสินค้า:</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">ราคา:</label>
+                        <input type="number" id="productPrice" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">หมวดหมู่:</label>
+                        <select id="productCategory" required>
+                            </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productImage">URL รูปภาพ:</label>
+                        <input type="url" id="productImage" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label for="productSize">ขนาด (คั่นด้วยคอมม่า):</label>
+                        <input type="text" id="productSize" placeholder="S,M,L,XL">
+                    </div>
+                    <div class="form-group">
+                        <label for="productColor">สี:</label>
+                        <input type="text" id="productColor" placeholder="แดง, น้ำเงิน, ขาว">
+                    </div>
+                    <div class="form-group">
+                        <label for="productStock">สต็อก:</label>
+                        <input type="number" id="productStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">รายละเอียด:</label>
+                        <textarea id="productDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="save-button">บันทึก</button>
+                        <button type="button" class="cancel-button" id="cancelProductBtn">ยกเลิก</button>
+                    </div>
+                </form>
+                <div id="productMessage" class="message"></div>
+            </div>
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ชื่อ</th>
+                        <th>ราคา</th>
+                        <th>หมวดหมู่</th>
+                        <th>สต็อก</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="categoriesSection" class="section-container">
+            <h2>จัดการหมวดหมู่</h2>
+            <div class="action-buttons">
+                <button class="add-button" id="addCategoryBtn">เพิ่มหมวดหมู่ใหม่</button>
+            </div>
+            <div id="categoryFormContainer" class="form-container" style="display:none;">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId">
+                    <div class="form-group">
+                        <label for="categoryName">ชื่อหมวดหมู่:</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="save-button">บันทึก</button>
+                        <button type="button" class="cancel-button" id="cancelCategoryBtn">ยกเลิก</button>
+                    </div>
+                </form>
+                <div id="categoryMessage" class="message"></div>
+            </div>
+            <table id="categoriesTable">
+                <thead>
+                    <tr>
+                        <th>Category ID</th>
+                        <th>ชื่อหมวดหมู่</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="ordersSection" class="section-container">
+            <h2>จัดการคำสั่งซื้อ</h2>
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>ลูกค้า</th>
+                        <th>สินค้า</th>
+                        <th>จำนวน</th>
+                        <th>รวม</th>
+                        <th>สถานะ</th>
+                        <th>วันที่</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <div id="orderMessage" class="message"></div>
+        </div>
+    </div>
+
+    <div class="inactivity-overlay" id="inactivityOverlay">
+        <p>คุณไม่มีกิจกรรมเกิน 1 ชั่วโมง ระบบจะออกจากระบบในไม่ช้า<br>คลิกที่ใดก็ได้เพื่อกลับสู่ระบบ</p>
+    </div>
+
+    <script>
+        const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
+        const ADMIN_INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 ชั่วโมง (ในหน่วยมิลลิวินาที)
+
+        let inactivityTimer;
+        const inactivityOverlay = document.getElementById('inactivityOverlay');
+
+        // --- Authentication & Session Management ---
+        function checkAuth() {
+            const adminToken = localStorage.getItem('adminToken');
+            if (!adminToken) {
+                alert('กรุณาเข้าสู่ระบบ Admin ก่อน');
+                window.location.href = 'login.html';
+            }
+        }
+
+        async function logoutAdmin() {
+            const confirmed = confirm('คุณต้องการออกจากระบบหรือไม่?');
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}?action=adminLogout`);
+                    const data = await response.json();
+                    if (data.success) {
+                        localStorage.removeItem('adminToken');
+                        alert('ออกจากระบบสำเร็จ');
+                        window.location.href = 'login.html';
+                    } else {
+                        alert('เกิดข้อผิดพลาดในการออกจากระบบ: ' + data.error);
+                    }
+                } catch (error) {
+                    console.error('Network error during logout:', error);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+                }
+            }
+        }
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityOverlay.style.display = 'none'; // Hide overlay
+            inactivityTimer = setTimeout(() => {
+                inactivityOverlay.style.display = 'flex'; // Show overlay
+                // Give user a moment to click, then force logout
+                setTimeout(() => {
+                    if (inactivityOverlay.style.display === 'flex') { // Still visible, means no activity
+                        forceLogout();
+                    }
+                }, 5000); // 5 seconds to click after overlay appears
+            }, ADMIN_INACTIVITY_TIMEOUT);
+        }
+
+        function forceLogout() {
+            localStorage.removeItem('adminToken');
+            alert('คุณไม่มีกิจกรรมเกิน 1 ชั่วโมง ระบบได้ทำการออกจากระบบโดยอัตโนมัติ');
+            window.location.href = 'login.html';
+        }
+
+        // Event listeners for activity
+        ['mousemove', 'keypress', 'scroll', 'click'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer);
+        });
+        inactivityOverlay.addEventListener('click', resetInactivityTimer); // Clicking overlay resets too
+
+
+        // --- UI and Data Loading ---
+        const sections = {
+            products: document.getElementById('productsSection'),
+            categories: document.getElementById('categoriesSection'),
+            orders: document.getElementById('ordersSection')
+        };
+        const navButtons = {
+            products: document.getElementById('navProducts'),
+            categories: document.getElementById('navCategories'),
+            orders: document.getElementById('navOrders')
+        };
+
+        function showSection(sectionId) {
+            for (const key in sections) {
+                sections[key].style.display = 'none';
+                navButtons[key].classList.remove('active');
+            }
+            sections[sectionId].style.display = 'block';
+            navButtons[sectionId].classList.add('active');
+        }
+
+        // --- Product Management ---
+        const productsTableBody = document.querySelector('#productsTable tbody');
+        const productFormContainer = document.getElementById('productFormContainer');
+        const productForm = document.getElementById('productForm');
+        const addProductBtn = document.getElementById('addProductBtn');
+        const cancelProductBtn = document.getElementById('cancelProductBtn');
+        const productMessage = document.getElementById('productMessage');
+        const productCategorySelect = document.getElementById('productCategory');
+        let currentCategoriesData = []; // To populate category dropdown
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}?action=getProducts`);
+                const data = await response.json();
+                productsTableBody.innerHTML = ''; // Clear table
+
+                if (data.success && data.products.length > 0) {
+                    data.products.forEach(p => {
+                        const row = productsTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${p.id}</td>
+                            <td>${p.name}</td>
+                            <td>${p.price}</td>
+                            <td>${p.category}</td>
+                            <td>${p.stock}</td>
+                            <td>
+                                <button class="edit-button" data-id="${p.id}">แก้ไข</button>
+                                <button class="delete-button" data-id="${p.id}">ลบ</button>
+                            </td>
+                        `;
+                    });
+                    attachProductTableListeners();
+                } else {
+                    productsTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">ไม่พบสินค้า</td></tr>';
+                }
+            } catch (error) {
+                productMessage.textContent = 'Error loading products: ' + error.message;
+                productMessage.className = 'message error';
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function attachProductTableListeners() {
+            productsTableBody.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const productId = button.dataset.id;
+                    const productToEdit = (await (await fetch(`${API_URL}?action=getProducts`)).json()).products.find(p => p.id == productId);
+                    if (productToEdit) {
+                        document.getElementById('productId').value = productToEdit.id;
+                        document.getElementById('productName').value = productToEdit.name;
+                        document.getElementById('productPrice').value = productToEdit.price;
+                        document.getElementById('productImage').value = productToEdit.image;
+                        document.getElementById('productSize').value = productToEdit.size;
+                        document.getElementById('productColor').value = productToEdit.color;
+                        document.getElementById('productStock').value = productToEdit.stock;
+                        document.getElementById('productDescription').value = productToEdit.description;
+                        
+                        // Select correct category
+                        const categoryOption = Array.from(productCategorySelect.options).find(opt => opt.value === productToEdit.category);
+                        if (categoryOption) categoryOption.selected = true;
+                        
+                        productFormContainer.style.display = 'block';
+                        productMessage.textContent = '';
+                    }
+                });
+            });
+
+            productsTableBody.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const productId = button.dataset.id;
+                    if (confirm(`คุณแน่ใจหรือไม่ที่จะลบสินค้า ID: ${productId} ?`)) {
+                        try {
+                            const params = new URLSearchParams();
+                            params.append('action', 'deleteProduct');
+                            params.append('id', productId);
+                            const response = await fetch(`${API_URL}?${params.toString()}`, { method: 'POST' });
+                            const data = await response.json();
+                            if (data.success) {
+                                productMessage.textContent = 'สินค้าถูกลบสำเร็จ';
+                                productMessage.className = 'message success';
+                                loadProducts(); // Reload table
+                            } else {
+                                productMessage.textContent = 'Error: ' + data.error;
+                                productMessage.className = 'message error';
+                            }
+                        } catch (error) {
+                            productMessage.textContent = 'Network error: ' + error.message;
+                            productMessage.className = 'message error';
+                        }
+                    }
+                });
+            });
+        }
+
+        addProductBtn.addEventListener('click', () => {
+            productForm.reset();
+            document.getElementById('productId').value = ''; // Clear ID for new product
+            productFormContainer.style.display = 'block';
+            productMessage.textContent = '';
+        });
+
+        cancelProductBtn.addEventListener('click', () => {
+            productFormContainer.style.display = 'none';
+            productMessage.textContent = '';
+        });
+
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const productId = document.getElementById('productId').value;
+            const action = productId ? 'updateProduct' : 'addProduct';
+            
+            const params = new URLSearchParams();
+            params.append('action', action);
+            if (productId) params.append('id', productId);
+            params.append('name', document.getElementById('productName').value);
+            params.append('price', document.getElementById('productPrice').value);
+            params.append('category', document.getElementById('productCategory').value);
+            params.append('image', document.getElementById('productImage').value);
+            params.append('size', document.getElementById('productSize').value);
+            params.append('color', document.getElementById('productColor').value);
+            params.append('stock', document.getElementById('productStock').value);
+            params.append('description', document.getElementById('productDescription').value);
+
+            try {
+                const response = await fetch(`${API_URL}?${params.toString()}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    productMessage.textContent = data.message;
+                    productMessage.className = 'message success';
+                    productFormContainer.style.display = 'none';
+                    loadProducts(); // Reload table
+                } else {
+                    productMessage.textContent = 'Error: ' + data.error;
+                    productMessage.className = 'message error';
+                }
+            } catch (error) {
+                productMessage.textContent = 'Network error: ' + error.message;
+                productMessage.className = 'message error';
+            }
+        });
+
+
+        // --- Category Management ---
+        const categoriesTableBody = document.querySelector('#categoriesTable tbody');
+        const categoryFormContainer = document.getElementById('categoryFormContainer');
+        const categoryForm = document.getElementById('categoryForm');
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+        const categoryMessage = document.getElementById('categoryMessage');
+
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_URL}?action=getCategories`);
+                const data = await response.json();
+                categoriesTableBody.innerHTML = ''; // Clear table
+                productCategorySelect.innerHTML = '<option value="">เลือกหมวดหมู่</option>'; // Clear product category dropdown
+
+                if (data.success && data.categories.length > 0) {
+                    currentCategoriesData = data.categories; // Save for product dropdown
+                    data.categories.forEach(c => {
+                        const row = categoriesTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${c.categoryid}</td>
+                            <td>${c.categoryname}</td>
+                            <td>
+                                <button class="edit-button" data-id="${c.categoryid}">แก้ไข</button>
+                                <button class="delete-button" data-id="${c.categoryid}">ลบ</button>
+                            </td>
+                        `;
+                        // Populate product category dropdown
+                        const option = document.createElement('option');
+                        option.value = c.categoryname; // Use name as value for simplicity
+                        option.textContent = c.categoryname;
+                        productCategorySelect.appendChild(option);
+                    });
+                    attachCategoryTableListeners();
+                } else {
+                    categoriesTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">ไม่พบหมวดหมู่</td></tr>';
+                }
+            } catch (error) {
+                categoryMessage.textContent = 'Error loading categories: ' + error.message;
+                categoryMessage.className = 'message error';
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        function attachCategoryTableListeners() {
+            categoriesTableBody.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const categoryId = button.dataset.id;
+                    const categoryToEdit = currentCategoriesData.find(c => c.categoryid === categoryId);
+                    if (categoryToEdit) {
+                        document.getElementById('categoryId').value = categoryToEdit.categoryid;
+                        document.getElementById('categoryName').value = categoryToEdit.categoryname;
+                        categoryFormContainer.style.display = 'block';
+                        categoryMessage.textContent = '';
+                    }
+                });
+            });
+
+            categoriesTableBody.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const categoryId = button.dataset.id;
+                    if (confirm(`คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่ ID: ${categoryId} ? \n(สินค้าที่เคยอยู่ในหมวดหมู่นี้จะยังคงมีชื่อหมวดหมู่เดิมอยู่)`)) {
+                        try {
+                            const params = new URLSearchParams();
+                            params.append('action', 'deleteCategory');
+                            params.append('id', categoryId);
+                            const response = await fetch(`${API_URL}?${params.toString()}`, { method: 'POST' });
+                            const data = await response.json();
+                            if (data.success) {
+                                categoryMessage.textContent = 'หมวดหมู่ถูกลบสำเร็จ';
+                                categoryMessage.className = 'message success';
+                                loadCategories(); // Reload table
+                                loadProducts(); // Reload products as categories might have changed
+                            } else {
+                                categoryMessage.textContent = 'Error: ' + data.error;
+                                categoryMessage.className = 'message error';
+                            }
+                        } catch (error) {
+                            categoryMessage.textContent = 'Network error: ' + error.message;
+                            categoryMessage.className = 'message error';
+                        }
+                    }
+                });
+            });
+        }
+
+        addCategoryBtn.addEventListener('click', () => {
+            categoryForm.reset();
+            document.getElementById('categoryId').value = ''; // Clear ID for new category
+            categoryFormContainer.style.display = 'block';
+            categoryMessage.textContent = '';
+        });
+
+        cancelCategoryBtn.addEventListener('click', () => {
+            categoryFormContainer.style.display = 'none';
+            categoryMessage.textContent = '';
+        });
+
+        categoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const categoryId = document.getElementById('categoryId').value;
+            const action = categoryId ? 'updateCategory' : 'addCategory';
+            
+            const params = new URLSearchParams();
+            params.append('action', action);
+            if (categoryId) params.append('categoryId', categoryId);
+            params.append(categoryId ? 'newCategoryName' : 'categoryName', document.getElementById('categoryName').value); // Adjust parameter name based on action
+
+            try {
+                const response = await fetch(`${API_URL}?${params.toString()}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    categoryMessage.textContent = data.message;
+                    categoryMessage.className = 'message success';
+                    categoryFormContainer.style.display = 'none';
+                    loadCategories(); // Reload table
+                } else {
+                    categoryMessage.textContent = 'Error: ' + data.error;
+                    categoryMessage.className = 'message error';
+                }
+            } catch (error) {
+                categoryMessage.textContent = 'Network error: ' + error.message;
+                categoryMessage.className = 'message error';
+            }
+        });
+
+
+        // --- Order Management ---
+        const ordersTableBody = document.querySelector('#ordersTable tbody');
+        const orderMessage = document.getElementById('orderMessage');
+
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_URL}?action=getOrders`);
+                const data = await response.json();
+                ordersTableBody.innerHTML = ''; // Clear table
+
+                if (data.success && data.orders.length > 0) {
+                    data.orders.forEach(o => {
+                        const row = ordersTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${o.orderid}</td>
+                            <td>${o.customername}</td>
+                            <td>${o.product} x ${o.quantity}</td>
+                            <td>${o.total}</td>
+                            <td>
+                                <select class="status-select" data-order-id="${o.orderid}">
+                                    <option value="รอการชำระเงิน" ${o.status === 'รอการชำระเงิน' ? 'selected' : ''}>รอการชำระเงิน</option>
+                                    <option value="ชำระแล้ว" ${o.status === 'ชำระแล้ว' ? 'selected' : ''}>ชำระแล้ว</option>
+                                    <option value="จัดส่งแล้ว" ${o.status === 'จัดส่งแล้ว' ? 'selected' : ''}>จัดส่งแล้ว</option>
+                                    <option value="ยกเลิก" ${o.status === 'ยกเลิก' ? 'selected' : ''}>ยกเลิก</option>
+                                </select>
+                            </td>
+                            <td>${o.date}</td>
+                            <td><button class="update-status-button" data-id="${o.orderid}">อัปเดต</button></td>
+                        `;
+                    });
+                    attachOrderTableListeners();
+                } else {
+                    ordersTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">ไม่พบคำสั่งซื้อ</td></tr>';
+                }
+            } catch (error) {
+                orderMessage.textContent = 'Error loading orders: ' + error.message;
+                orderMessage.className = 'message error';
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function attachOrderTableListeners() {
+            ordersTableBody.querySelectorAll('.update-status-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const orderId = button.dataset.id;
+                    const statusSelect = button.closest('tr').querySelector('.status-select');
+                    const newStatus = statusSelect.value;
+
+                    try {
+                        const params = new URLSearchParams();
+                        params.append('action', 'updateOrderStatus');
+                        params.append('orderId', orderId);
+                        params.append('status', newStatus);
+                        const response = await fetch(`${API_URL}?${params.toString()}`, { method: 'POST' });
+                        const data = await response.json();
+                        if (data.success) {
+                            orderMessage.textContent = 'สถานะคำสั่งซื้ออัปเดตสำเร็จ';
+                            orderMessage.className = 'message success';
+                            // No need to reload, status is already updated in dropdown
+                        } else {
+                            orderMessage.textContent = 'Error: ' + data.error;
+                            orderMessage.className = 'message error';
+                        }
+                    } catch (error) {
+                        orderMessage.textContent = 'Network error: ' + error.message;
+                        orderMessage.className = 'message error';
+                    }
+                });
+            });
+        }
+
+
+        // --- Initialization on Admin Dashboard Load ---
+        window.onload = () => {
+            checkAuth(); // Check if admin is logged in
+            resetInactivityTimer(); // Start inactivity timer
+
+            // Setup navigation
+            navButtons.products.addEventListener('click', () => { showSection('products'); loadProducts(); });
+            navButtons.categories.addEventListener('click', () => { showSection('categories'); loadCategories(); });
+            navButtons.orders.addEventListener('click', () => { showSection('orders'); loadOrders(); });
+            document.getElementById('logoutButton').addEventListener('click', logoutAdmin);
+
+            // Default view to Products
+            showSection('products');
+            loadProducts();
+            loadCategories(); // Always load categories as they are needed for product forms
+        };
+    </script>
+</body>
+</html>
