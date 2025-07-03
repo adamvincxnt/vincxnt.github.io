@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ร้านเสื้อออนไลน์</title>
-    <!-- เพิ่ม Google Fonts - Kanit -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>VINCXNT - OFFICIAL</title>
+    <!-- เพิ่ม Google Fonts - Inter สำหรับทุกข้อความ -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* CSS ทั่วไป */
         * {
@@ -15,10 +15,11 @@
         }
 
         body {
-            font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif; /* Font สำหรับทุกข้อความ */
+            background-color: #f9f9f9; /* Light, clean background */
             min-height: 100vh;
-            color: #333;
+            color: #333; /* Dark text for readability */
+            line-height: 1.6;
         }
 
         .container {
@@ -30,43 +31,54 @@
         /* Header */
         .header {
             text-align: center;
-            color: white;
+            color: #333;
             margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            background-color: #ffffff; /* Clean white background */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            border-bottom: 1px solid #eee;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            color: #222;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #666;
         }
 
         .nav-buttons {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 25px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
         }
 
         .nav-buttons button {
-            background-color: #ff6f61;
-            color: white;
+            background-color: #e0e0e0; /* Light grey button */
+            color: #333;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         .nav-buttons button:hover {
-            background-color: #e65c50;
-            transform: translateY(-2px);
+            background-color: #d0d0d0;
+        }
+
+        .nav-buttons button.active {
+            background-color: #007bff; /* Primary blue for active state */
+            color: white;
         }
 
         /* Product List */
@@ -74,26 +86,25 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
-            background: rgba(255, 255, 255, 0.2);
+            background-color: #ffffff;
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .product-card {
-            background: white;
-            border-radius: 12px;
+            background-color: #ffffff;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            border: 1px solid #eee; /* Light border */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             flex-direction: column;
         }
 
         .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .product-card img {
@@ -112,35 +123,37 @@
         }
 
         .product-info h3 {
-            font-size: 1.4em;
+            font-size: 1.5em;
             margin-bottom: 8px;
             color: #333;
+            font-weight: 600;
         }
 
         .product-info p {
             font-size: 0.95em;
-            color: #555;
+            color: #666;
             margin-bottom: 5px;
         }
 
         .product-price {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #ff6f61;
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #4CAF50; /* Green for price */
             margin-top: 10px;
         }
 
         .add-to-cart-btn {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green button */
             color: white;
             border: none;
             padding: 10px 15px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 1em;
+            font-weight: 500;
             margin-top: 15px;
-            transition: background-color 0.3s ease;
-            align-self: flex-start; /* Align button to start */
+            transition: background-color 0.2s ease;
+            align-self: flex-start;
         }
 
         .add-to-cart-btn:hover {
@@ -149,20 +162,22 @@
 
         /* Cart Section */
         .cart-section {
-            background: white;
+            background-color: #ffffff;
             padding: 25px;
             margin-top: 30px;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-            max-height: 80vh; /* Limit height */
-            overflow-y: auto; /* Enable scrolling */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #eee;
         }
 
         .cart-section h2 {
             text-align: center;
             color: #333;
             margin-bottom: 20px;
-            font-size: 1.8em;
+            font-size: 2em;
+            font-weight: 600;
         }
 
         #cart-items {
@@ -175,7 +190,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px dashed #eee;
         }
 
@@ -194,7 +209,7 @@
 
         .cart-item-details p {
             font-size: 0.9em;
-            color: #777;
+            color: #666;
         }
 
         .cart-item-controls {
@@ -206,12 +221,13 @@
         .quantity-btn {
             background-color: #f0f0f0;
             border: 1px solid #ddd;
-            padding: 5px 8px;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.9em;
-            min-width: 30px;
+            font-size: 1em;
+            min-width: 35px;
             text-align: center;
+            transition: background-color 0.2s ease;
         }
 
         .quantity-btn:hover {
@@ -219,13 +235,14 @@
         }
 
         .remove-item-btn {
-            background-color: #dc3545;
+            background-color: #dc3545; /* Red for remove */
             color: white;
             border: none;
             padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
+            transition: background-color 0.2s ease;
         }
 
         .remove-item-btn:hover {
@@ -233,24 +250,25 @@
         }
 
         #cart-total {
-            font-size: 1.5em;
-            font-weight: 600;
+            font-size: 1.8em;
+            font-weight: 700;
             text-align: right;
             margin-top: 20px;
-            color: #ff6f61;
+            color: #007bff; /* Primary blue for total */
         }
 
         .checkout-btn {
             display: block;
             width: 100%;
-            background-color: #007bff;
+            background-color: #007bff; /* Primary blue */
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 15px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1.1em;
-            margin-top: 20px;
+            font-weight: 600;
+            margin-top: 25px;
             transition: background-color 0.3s ease;
         }
 
@@ -260,32 +278,33 @@
 
         /* Modal Styles */
         .modal-overlay {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
+            display: none;
+            position: fixed;
+            z-index: 1000;
             left: 0;
             top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-            backdrop-filter: blur(5px);
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4); /* Lighter overlay */
+            backdrop-filter: blur(4px);
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background-color: #fefefe;
+            background-color: #ffffff;
             margin: auto;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 8px;
             width: 90%;
             max-width: 700px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             position: relative;
             animation: fadeIn 0.3s ease-out;
             max-height: 90vh;
             overflow-y: auto;
+            border: 1px solid #eee;
         }
 
         .close-button {
@@ -293,7 +312,7 @@
             position: absolute;
             top: 15px;
             right: 25px;
-            font-size: 35px;
+            font-size: 30px;
             font-weight: bold;
             cursor: pointer;
             transition: color 0.2s ease;
@@ -308,7 +327,7 @@
         .modal-body {
             display: flex;
             gap: 20px;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            flex-wrap: wrap;
         }
 
         .modal-image {
@@ -319,7 +338,8 @@
         .modal-image img {
             width: 100%;
             height: auto;
-            border-radius: 8px;
+            border-radius: 5px;
+            border: 1px solid #eee;
         }
 
         .modal-details {
@@ -331,6 +351,7 @@
             font-size: 2em;
             margin-bottom: 10px;
             color: #333;
+            font-weight: 600;
         }
 
         .modal-details p {
@@ -341,8 +362,8 @@
 
         .modal-details .price {
             font-size: 1.8em;
-            font-weight: 600;
-            color: #ff6f61;
+            font-weight: 700;
+            color: #4CAF50;
             margin-top: 15px;
         }
 
@@ -354,6 +375,8 @@
 
         .modal-details select,
         .modal-details input[type="number"] {
+            background-color: #f8f8f8;
+            color: #333;
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -364,17 +387,18 @@
 
         .modal-details .add-to-cart-btn {
             width: 100%;
-            margin-top: 0; /* Override default margin */
+            margin-top: 0;
         }
 
         /* Checkout Form & Payment Form */
         .checkout-section, .payment-section {
-            background: white;
+            background-color: #ffffff;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             max-width: 600px;
             margin: 30px auto;
+            border: 1px solid #eee;
         }
 
         .checkout-section h2, .payment-section h2 {
@@ -382,6 +406,7 @@
             margin-bottom: 25px;
             color: #333;
             font-size: 2em;
+            font-weight: 600;
         }
 
         .form-group {
@@ -391,7 +416,7 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-weight: 600;
+            font-weight: 500;
             color: #555;
         }
 
@@ -402,18 +427,22 @@
         .form-group input[type="date"],
         .form-group textarea,
         .form-group select {
+            background-color: #f8f8f8;
+            color: #333;
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 1em;
-            box-sizing: border-box; /* Include padding in width */
+            box-sizing: border-box;
         }
 
         .form-group input[type="file"] {
+            background-color: #f8f8f8;
+            color: #333;
             border: 1px solid #ddd;
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 5px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -421,20 +450,20 @@
         .submit-btn {
             display: block;
             width: 100%;
-            background-color: #28a745;
+            background-color: #007bff; /* Primary blue */
             color: white;
             border: none;
             padding: 15px 25px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1.2em;
+            font-weight: 600;
             margin-top: 25px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: background-color 0.3s ease;
         }
 
         .submit-btn:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
+            background-color: #0056b3;
         }
 
         .submit-btn:disabled {
@@ -455,7 +484,7 @@
             height: 36px;
             border-radius: 50%;
             border-left-color: #007bff;
-            animation: spin 1s ease infinite;
+            animation: spin 1s linear infinite;
             margin: 0 auto 10px auto;
         }
 
@@ -469,7 +498,7 @@
             padding: 10px;
             border-radius: 5px;
             text-align: center;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .message.success {
@@ -492,23 +521,53 @@
             .modal-details {
                 min-width: unset;
             }
+            .header h1 {
+                font-size: 2.2em;
+            }
+            .nav-buttons {
+                flex-direction: column; /* Stack buttons on small screens */
+            }
+            .nav-buttons button {
+                width: 100%;
+            }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bank Details Specific Style */
+        .bank-details {
+            background-color: #f0f8ff; /* Light blue background */
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: left;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .bank-details p {
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .bank-details strong {
+            color: #0056b3; /* Darker blue for emphasis */
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>ร้านเสื้อออนไลน์</h1>
-            <p>เลือกซื้อเสื้อผ้าแฟชั่นคุณภาพดี</p>
+            <h1>VINCXNT</h1>
+            <p>Minimal & Modern Apparel</p>
             <div class="nav-buttons">
-                <button onclick="showSection('product-list-section')">สินค้า</button>
-                <button onclick="showSection('cart-section')">ตะกร้าสินค้า</button>
-                <button onclick="showSection('checkout-section')">สั่งซื้อ</button>
-                <button onclick="showSection('payment-section')">แจ้งชำระเงิน</button>
+                <button id="nav-products" onclick="showSection('product-list-section')">สินค้า</button>
+                <button id="nav-cart" onclick="showSection('cart-section')">ตะกร้าสินค้า</button>
+                <button id="nav-checkout" onclick="showSection('checkout-section')">สั่งซื้อ</button>
+                <button id="nav-payment" onclick="showSection('payment-section')">แจ้งชำระเงิน</button>
             </div>
         </div>
 
@@ -568,18 +627,18 @@
         <!-- Payment Confirmation Section -->
         <div id="payment-section" class="payment-section" style="display: none;">
             <h2>แจ้งชำระเงิน</h2>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">กรุณาโอนเงินเข้าบัญชีด้านล่างนี้ และแนบสลิปเพื่อยืนยันการชำระเงิน</p>
+            
+            <div class="bank-details">
+                <p><strong>ธนาคาร:</strong> กสิกรไทย</p>
+                <p><strong>เลขที่บัญชี:</strong> 1518438812</p>
+                <p><strong>ชื่อบัญชี:</strong> สุธินันท์ คำวิโส</p>
+            </div>
+
             <form id="paymentForm">
                 <div class="form-group">
                     <label for="paymentConfirmOrderId">หมายเลขคำสั่งซื้อ:</label>
-                    <input type="text" id="paymentConfirmOrderId" required>
-                </div>
-                <div class="form-group">
-                    <label for="payerName">ชื่อผู้โอน:</label>
-                    <input type="text" id="payerName" required>
-                </div>
-                <div class="form-group">
-                    <label for="payerBank">ธนาคารที่โอน:</label>
-                    <input type="text" id="payerBank" required>
+                    <input type="text" id="paymentConfirmOrderId" required readonly> <!-- Readonly to prevent user editing -->
                 </div>
                 <div class="form-group">
                     <label for="amountPaid">จำนวนเงินที่โอน:</label>
@@ -637,7 +696,7 @@
 
     <script>
         // กำหนด URL ของ Google Apps Script
-        const API_URL = 'https://script.google.com/macros/s/AKfycbySr_Yl1kYS8vHV1UItFshepR5_goKvY0RF-yJC5cBqDGlXAUx9tF60wc5EWik_aDF73g/exec'; // *** สำคัญ: เปลี่ยน URL นี้! ***
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzZclGR4db9mMRbIUHKnR_1ZX7hrwlWWqyYvugUpSuO2ho4vzlcsJbj4OVeQGBVWMCJ_Q/exec'; // *** สำคัญ: เปลี่ยน URL นี้! ***
         
         let currentProduct = null;
         let products = [];
@@ -670,6 +729,10 @@
         const paymentLoading = document.getElementById('paymentLoading');
         const paymentMessage = document.getElementById('paymentMessage');
 
+        // Navigation Buttons
+        const navButtons = document.querySelectorAll('.nav-buttons button');
+
+
         // โหลดสินค้าและอัปเดตตะกร้าเมื่อหน้าเว็บเริ่มต้น
         window.onload = function() {
             loadProducts();
@@ -679,12 +742,21 @@
 
         // ฟังก์ชันเปลี่ยน Section
         function showSection(sectionId) {
+            // Hide all sections
             document.getElementById('product-list-section').style.display = 'none';
             document.getElementById('cart-section').style.display = 'none';
             document.getElementById('checkout-section').style.display = 'none';
             document.getElementById('payment-section').style.display = 'none';
 
+            // Show the selected section
             document.getElementById(sectionId).style.display = 'block';
+
+            // Update active navigation button
+            navButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(`nav-${sectionId.replace('-section', '')}`).classList.add('active');
+
 
             // หากเป็นส่วนตะกร้าสินค้า ให้อัปเดตการแสดงผล
             if (sectionId === 'cart-section') {
@@ -703,11 +775,11 @@
                     displayProducts();
                 } else {
                     console.error('Error loading products:', data.error);
-                    productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: red;">ไม่สามารถโหลดสินค้าได้: ' + data.error + '</p>';
+                    productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: #dc3545;">ไม่สามารถโหลดสินค้าได้: ' + data.error + '</p>';
                 }
             } catch (error) {
                 console.error('Network error loading products:', error);
-                productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: red;">เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message + '</p>';
+                productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: #dc3545;">เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message + '</p>';
             }
         }
 
@@ -715,7 +787,7 @@
         function displayProducts() {
             productGrid.innerHTML = ''; // Clear existing products
             if (products.length === 0) {
-                productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: #555;">ไม่มีสินค้าในขณะนี้</p>';
+                productGrid.innerHTML = '<p style="text-align: center; width: 100%; color: #666;">ไม่มีสินค้าในขณะนี้</p>';
                 return;
             }
 
@@ -991,8 +1063,7 @@
             document.querySelector('#paymentForm button[type="submit"]').disabled = true;
 
             const orderId = document.getElementById('paymentConfirmOrderId').value;
-            const payerName = document.getElementById('payerName').value;
-            const payerBank = document.getElementById('payerBank').value;
+            // Removed payerName and payerBank as they are no longer collected
             const amountPaid = parseFloat(document.getElementById('amountPaid').value);
             const paymentDate = document.getElementById('paymentDate').value;
             const paymentSlipFile = document.getElementById('paymentSlip').files[0];
@@ -1014,8 +1085,7 @@
                 // *** สำคัญ: สร้าง FormData เพื่อแก้ปัญหา CORS ***
                 const formData = new FormData();
                 formData.append('orderId', orderId);
-                formData.append('payerName', payerName);
-                formData.append('payerBank', payerBank);
+                // Removed payerName and payerBank from formData
                 formData.append('amountPaid', amountPaid);
                 formData.append('paymentDate', paymentDate);
                 formData.append('slipBase64', slipBase64); // ส่ง Base64 string ของสลิป
