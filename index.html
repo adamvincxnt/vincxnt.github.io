@@ -305,438 +305,116 @@
 
     </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxq5RFZCPGn2nU7WSz4kB3X-q6QcxENxxw3A6azOM5pm802NJs32IYZ4cD2sb7cKl3T3A/exec'; // **สำคัญ: เปลี่ยนเป็น URL ที่ Deploy แล้ว**
+<script>
+    const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // ตรวจสอบให้แน่ใจว่า URL นี้ถูกต้อง!
+    // ... (โค้ดส่วนอื่นๆ)
+
+    // --- Checkout Form Submission ---
+    checkoutForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
         
-        let allProducts = []; 
-        let currentCategories = []; 
-        let cart = []; 
-        let currentOrderId = ''; // เก็บ Order ID ที่เพิ่งสร้างสำเร็จ
-
-        // Elements
-        const productGrid = document.getElementById('productGrid');
-        const productDetailModal = document.getElementById('productDetailModal');
-        const closeProductDetailModal = document.getElementById('closeProductDetailModal');
-        const modalQuantityInput = document.getElementById('modalQuantity');
-        const addToCartButton = document.getElementById('addToCartButton');
-        const cartIcon = document.getElementById('cartIcon');
-        const cartCountSpan = document.getElementById('cartCount');
-        const cartModal = document.getElementById('cartModal');
-        const closeCartModal = document.getElementById('closeCartModal');
-        const cartItemsList = document.getElementById('cartItemsList');
-        const cartTotalSpan = document.querySelector('#cartTotal span');
-        const checkoutForm = document.getElementById('checkoutForm');
-        const checkoutLoading = document.getElementById('checkoutLoading');
-        const checkoutMessage = document.getElementById('checkoutMessage');
-        const categoryFilterDiv = document.querySelector('.category-filter');
-
-        // New Elements for Payment Confirmation
-        const paymentConfirmationSection = document.getElementById('paymentConfirmationSection');
-        const paymentOrderIdDisplay = document.getElementById('paymentOrderIdDisplay');
-        const amountToPayDisplay = document.getElementById('amountToPayDisplay');
-        const paymentForm = document.getElementById('paymentForm');
-        const paymentConfirmOrderIdInput = document.getElementById('paymentConfirmOrderId');
-        const paymentConfirmAmountInput = document.getElementById('paymentConfirmAmount');
-        const paymentSlipInput = document.getElementById('paymentSlip');
-        const paymentSlipPreview = document.getElementById('paymentSlipPreview');
-        const paymentLoading = document.getElementById('paymentLoading');
-        const paymentMessage = document.getElementById('paymentMessage');
-
-        let selectedProduct = null; 
-
-        // --- Initialization ---
-        window.onload = function() {
-            loadCartFromLocalStorage();
-            updateCartCount();
-            loadAllData();
-        };
-
-        async function loadAllData() {
-            await loadCategories();
-            await loadProducts();
+        if (cart.length === 0) {
+            alert('ตะกร้าสินค้าของคุณว่างเปล่า ไม่สามารถดำเนินการสั่งซื้อได้');
+            return;
         }
 
-        // --- Data Loading from Backend ---
-        async function loadCategories() {
-            try {
-                const response = await fetch(`${API_URL}?action=getCategories`);
-                const data = await response.json();
-                if (data.success) {
-                    currentCategories = data.categories;
-                    displayCategoryFilters();
-                } else {
-                    console.error('Error loading categories:', data.error);
-                }
-            } catch (error) {
-                console.error('Network error loading categories:', error);
-            }
-        }
+        checkoutLoading.style.display = 'block'; 
+        checkoutMessage.textContent = ''; 
+        document.querySelector('#checkoutForm button[type="submit"]').disabled = true; // Disable button
 
-        async function loadProducts() {
-            try {
-                const response = await fetch(`${API_URL}?action=getProducts`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    allProducts = data.products; 
-                    displayProducts(allProducts); 
-                } else {
-                    console.error('Error loading products:', data.error);
-                    alert('ไม่สามารถโหลดสินค้าได้: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Network error loading products:', error);
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message);
-            }
-        }
+        const customerName = document.getElementById('checkoutCustomerName').value;
+        const phone = document.getElementById('checkoutPhone').value;
+        const email = document.getElementById('checkoutEmail').value;
+        const address = document.getElementById('checkoutAddress').value;
+        const note = document.getElementById('checkoutNote').value;
+        const total = parseFloat(cartTotalSpan.textContent);
 
-        // --- Display Functions ---
-        function displayCategoryFilters() {
-            categoryFilterDiv.innerHTML = '<button class="active" data-category="all">ทั้งหมด</button>'; 
+        // *** เปลี่ยนแปลงตรงนี้: สร้าง FormData แทนการใช้ JSON.stringify ***
+        const formData = new FormData();
+        formData.append('customerName', customerName);
+        formData.append('phone', phone);
+        formData.append('email', email);
+        formData.append('address', address);
+        formData.append('note', note);
+        formData.append('total', total);
+        formData.append('cartItems', JSON.stringify(cart)); // cartItems ต้องถูกแปลงเป็น JSON string ก่อน
 
-            currentCategories.forEach(cat => {
-                const button = document.createElement('button');
-                button.textContent = cat.categoryname;
-                button.dataset.category = cat.categoryname;
-                categoryFilterDiv.appendChild(button);
+        try {
+            const response = await fetch(`${API_URL}?action=createOrder`, {
+                method: 'POST',
+                // REMOVE THIS LINE: headers: { 'Content-Type': 'application/json' }, // ลบบรรทัดนี้ออก
+                body: formData // ใช้ formData ที่สร้างขึ้น
             });
+            const data = await response.json();
 
-            categoryFilterDiv.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    Array.from(categoryFilterDiv.children).forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    filterProducts(e.target.dataset.category);
-                }
-            });
+            // ... (โค้ดส่วนที่เหลือของ checkoutForm)
+        } catch (error) {
+            console.error('Network error during order creation:', error);
+            checkoutMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
+            checkoutMessage.style.color = 'red';
+        } finally {
+            checkoutLoading.style.display = 'none'; 
+            document.querySelector('#checkoutForm button[type="submit"]').disabled = false;
+        }
+    });
+
+    // --- Payment Confirmation Form Submission ---
+    paymentForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        paymentLoading.style.display = 'block';
+        paymentMessage.textContent = '';
+        document.querySelector('#paymentForm button[type="submit"]').disabled = true;
+
+        const orderId = document.getElementById('paymentConfirmOrderId').value;
+        const payerName = document.getElementById('payerName').value;
+        const payerBank = document.getElementById('payerBank').value;
+        const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+        const paymentDate = document.getElementById('paymentDate').value;
+        const paymentSlipFile = document.getElementById('paymentSlip').files[0];
+
+        if (!paymentSlipFile) {
+            alert('โปรดแนบรูปสลิปโอนเงิน');
+            paymentLoading.style.display = 'none';
+            document.querySelector('#paymentForm button[type="submit"]').disabled = false;
+            return;
         }
 
-        function filterProducts(category) {
-            const filteredProducts = category === 'all' 
-                ? allProducts 
-                : allProducts.filter(p => p.category === category);
-            displayProducts(filteredProducts);
-        }
+        const reader = new FileReader();
+        reader.readAsDataURL(paymentSlipFile);
 
-        function displayProducts(productsToDisplay) {
-            productGrid.innerHTML = ''; 
+        reader.onloadend = async () => {
+            const slipBase64 = reader.result; // data:image/png;base64,...
+            const slipMimeType = paymentSlipFile.type;
 
-            if (productsToDisplay.length === 0) {
-                productGrid.innerHTML = '<p style="text-align: center; color: white; grid-column: 1 / -1;">ไม่พบสินค้าในหมวดหมู่นี้</p>';
-                return;
-            }
-
-            productsToDisplay.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>${product.price} บาท</p>
-                    <button class="detail-button" data-id="${product.id}">ดูรายละเอียด</button>
-                `;
-                card.querySelector('.detail-button').addEventListener('click', () => openProductDetailModal(product));
-                productGrid.appendChild(card);
-            });
-        }
-
-        // --- Product Detail Modal ---
-        function openProductDetailModal(product) {
-            selectedProduct = product; 
-            document.getElementById('modalProductImage').src = product.image;
-            document.getElementById('modalProductName').textContent = product.name;
-            document.getElementById('modalProductPrice').textContent = product.price;
-            document.getElementById('modalProductCategory').textContent = product.category;
-            document.getElementById('modalProductStock').textContent = product.stock;
-            document.getElementById('modalProductDescription').textContent = product.description;
-            
-            modalQuantityInput.value = 1; 
-            modalQuantityInput.max = product.stock; 
-
-            productDetailModal.style.display = 'flex';
-        }
-
-        closeProductDetailModal.addEventListener('click', () => {
-            productDetailModal.style.display = 'none';
-        });
-
-        // Close modal if click outside
-        window.addEventListener('click', (event) => {
-            if (event.target === productDetailModal) {
-                productDetailModal.style.display = 'none';
-            }
-            if (event.target === cartModal) {
-                cartModal.style.display = 'none';
-            }
-        });
-
-        // --- Shopping Cart Functions ---
-        function saveCartToLocalStorage() {
-            localStorage.setItem('shoppingCart', JSON.stringify(cart));
-        }
-
-        function loadCartFromLocalStorage() {
-            const storedCart = localStorage.getItem('shoppingCart');
-            if (storedCart) {
-                cart = JSON.parse(storedCart);
-            }
-        }
-
-        function updateCartCount() {
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCountSpan.textContent = totalItems;
-        }
-
-        addToCartButton.addEventListener('click', () => {
-            if (!selectedProduct) return;
-
-            const quantity = parseInt(modalQuantityInput.value);
-            if (isNaN(quantity) || quantity <= 0) {
-                alert('โปรดระบุจำนวนที่ถูกต้อง');
-                return;
-            }
-            if (quantity > selectedProduct.stock) {
-                alert(`สินค้าในสต็อกมีเพียง ${selectedProduct.stock} ชิ้น`);
-                return;
-            }
-
-            const existingItemIndex = cart.findIndex(item => item.id === selectedProduct.id);
-
-            if (existingItemIndex > -1) {
-                cart[existingItemIndex].quantity += quantity;
-            } else {
-                cart.push({
-                    id: selectedProduct.id,
-                    name: selectedProduct.name,
-                    price: selectedProduct.price,
-                    image: selectedProduct.image,
-                    stock: selectedProduct.stock, 
-                    quantity: quantity,
-                    size: selectedProduct.size, 
-                    color: selectedProduct.color
-                });
-            }
-
-            saveCartToLocalStorage();
-            updateCartCount();
-            alert(`${quantity} ชิ้นของ ${selectedProduct.name} ถูกเพิ่มลงในตะกร้าแล้ว!`);
-            productDetailModal.style.display = 'none'; 
-        });
-
-        cartIcon.addEventListener('click', () => {
-            displayCartItems();
-            cartModal.style.display = 'flex';
-        });
-
-        closeCartModal.addEventListener('click', () => {
-            cartModal.style.display = 'none';
-        });
-
-        function displayCartItems() {
-            cartItemsList.innerHTML = ''; 
-            let totalCartPrice = 0;
-
-            if (cart.length === 0) {
-                cartItemsList.innerHTML = '<p style="text-align: center; color: #555;">ตะกร้าสินค้าว่างเปล่า</p>';
-                cartTotalSpan.textContent = '0';
-                return;
-            }
-
-            cart.forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}">
-                    <div class="item-info">
-                        <h4>${item.name}</h4>
-                        <p>ราคา: ${item.price} บาท | จำนวน: ${item.quantity} | รวม: ${item.price * item.quantity} บาท</p>
-                        ${item.size ? `<p>ขนาด: ${item.size}</p>` : ''}
-                        ${item.color ? `<p>สี: ${item.color}</p>` : ''}
-                    </div>
-                    <div class="item-actions">
-                        <button data-id="${item.id}" class="remove-item-button">&times;</button>
-                    </div>
-                `;
-                cartItemsList.appendChild(li);
-                totalCartPrice += item.price * item.quantity;
-            });
-
-            cartTotalSpan.textContent = totalCartPrice.toFixed(0);
-            attachCartItemListeners();
-        }
-
-        function attachCartItemListeners() {
-            cartItemsList.querySelectorAll('.remove-item-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const itemIdToRemove = e.target.dataset.id;
-                    cart = cart.filter(item => item.id != itemIdToRemove); 
-                    saveCartToLocalStorage();
-                    updateCartCount();
-                    displayCartItems(); 
-                });
-            });
-        }
-
-        // --- Checkout Form Submission ---
-        checkoutForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            
-            if (cart.length === 0) {
-                alert('ตะกร้าสินค้าของคุณว่างเปล่า ไม่สามารถดำเนินการสั่งซื้อได้');
-                return;
-            }
-
-            checkoutLoading.style.display = 'block'; 
-            checkoutMessage.textContent = ''; 
-            document.querySelector('#checkoutForm button[type="submit"]').disabled = true; // Disable button
-
-            const customerName = document.getElementById('checkoutCustomerName').value;
-            const phone = document.getElementById('checkoutPhone').value;
-            const email = document.getElementById('checkoutEmail').value;
-            const address = document.getElementById('checkoutAddress').value;
-            const note = document.getElementById('checkoutNote').value;
-            const total = parseFloat(cartTotalSpan.textContent);
-
-            const orderData = {
-                customerName: customerName,
-                phone: phone,
-                email: email,
-                address: address,
-                note: note,
-                total: total,
-                cartItems: cart 
-            };
+            // *** เปลี่ยนแปลงตรงนี้: สร้าง FormData แทนการใช้ JSON.stringify ***
+            const formData = new FormData();
+            formData.append('orderId', orderId);
+            formData.append('payerName', payerName);
+            formData.append('payerBank', payerBank);
+            formData.append('amountPaid', amountPaid);
+            formData.append('paymentDate', paymentDate);
+            formData.append('slipBase64', slipBase64);
+            formData.append('slipMimeType', slipMimeType);
 
             try {
-                const response = await fetch(`${API_URL}?action=createOrder`, {
+                const response = await fetch(`${API_URL}?action=confirmPayment`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json' 
-                    },
-                    body: JSON.stringify(orderData)
+                    // REMOVE THIS LINE: headers: { 'Content-Type': 'application/json' }, // ลบบรรทัดนี้ออก
+                    body: formData // ใช้ formData ที่สร้างขึ้น
                 });
                 const data = await response.json();
 
-                if (data.success) {
-                    checkoutMessage.textContent = `สั่งซื้อสำเร็จ! หมายเลขคำสั่งซื้อ: ${data.orderId}`;
-                    checkoutMessage.style.color = 'green';
-                    
-                    currentOrderId = data.orderId; // Store the new order ID
-                    
-                    cart = []; // Clear cart after successful order
-                    saveCartToLocalStorage();
-                    updateCartCount();
-                    checkoutForm.reset(); // Clear form
-
-                    // --- Show Payment Confirmation Section ---
-                    cartModal.style.display = 'none'; // Close cart modal
-                    productGrid.style.display = 'none'; // Hide product grid
-                    categoryFilterDiv.style.display = 'none'; // Hide category filters
-
-                    paymentOrderIdDisplay.textContent = currentOrderId;
-                    amountToPayDisplay.textContent = total.toFixed(0);
-                    paymentConfirmOrderIdInput.value = currentOrderId;
-                    paymentConfirmAmountInput.value = total.toFixed(2); // Pass exact total
-                    paymentConfirmationSection.style.display = 'block'; // Show payment section
-
-                } else {
-                    checkoutMessage.textContent = 'เกิดข้อผิดพลาดในการสั่งซื้อ: ' + data.error;
-                    checkoutMessage.style.color = 'red';
-                }
+                // ... (โค้ดส่วนที่เหลือของ paymentForm)
             } catch (error) {
-                console.error('Network error during order creation:', error);
-                checkoutMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
-                checkoutMessage.style.color = 'red';
-            } finally {
-                checkoutLoading.style.display = 'none'; 
-                document.querySelector('#checkoutForm button[type="submit"]').disabled = false; // Re-enable button
-            }
-        });
-
-        // --- Payment Confirmation Form Submission ---
-        paymentForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            paymentLoading.style.display = 'block';
-            paymentMessage.textContent = '';
-            document.querySelector('#paymentForm button[type="submit"]').disabled = true;
-
-            const orderId = document.getElementById('paymentConfirmOrderId').value;
-            const payerName = document.getElementById('payerName').value;
-            const payerBank = document.getElementById('payerBank').value;
-            const amountPaid = parseFloat(document.getElementById('amountPaid').value);
-            const paymentDate = document.getElementById('paymentDate').value; // YYYY-MM-DD
-            const paymentSlipFile = document.getElementById('paymentSlip').files[0];
-
-            if (!paymentSlipFile) {
-                alert('โปรดแนบรูปสลิปโอนเงิน');
-                paymentLoading.style.display = 'none';
-                document.querySelector('#paymentForm button[type="submit"]').disabled = false;
-                return;
-            }
-
-            // Read file as Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(paymentSlipFile);
-
-            reader.onloadend = async () => {
-                const slipBase64 = reader.result; // data:image/png;base64,...
-                const slipMimeType = paymentSlipFile.type;
-
-                const paymentData = {
-                    orderId: orderId,
-                    payerName: payerName,
-                    payerBank: payerBank,
-                    amountPaid: amountPaid,
-                    paymentDate: paymentDate,
-                    slipBase64: slipBase64,
-                    slipMimeType: slipMimeType
-                };
-
-                try {
-                    const response = await fetch(`${API_URL}?action=confirmPayment`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(paymentData)
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        paymentMessage.textContent = 'ยืนยันการชำระเงินสำเร็จ! กำลังรอการตรวจสอบ';
-                        paymentMessage.style.color = 'green';
-                        paymentForm.reset();
-                        paymentSlipPreview.style.display = 'none'; // Hide preview
-                        paymentSlipPreview.src = '#';
-                        
-                        // Optionally hide payment section after a delay
-                        setTimeout(() => {
-                            paymentConfirmationSection.style.display = 'none';
-                            productGrid.style.display = 'grid'; // Show products again
-                            categoryFilterDiv.style.display = 'block'; // Show category filters again
-                        }, 5000);
-
-                    } else {
-                        paymentMessage.textContent = 'เกิดข้อผิดพลาดในการยืนยันการชำระเงิน: ' + data.error;
-                        paymentMessage.style.color = 'red';
-                    }
-                } catch (error) {
-                    console.error('Network error during payment confirmation:', error);
-                    paymentMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
-                    paymentMessage.style.color = 'red';
-                } finally {
-                    paymentLoading.style.display = 'none';
-                    document.querySelector('#paymentForm button[type="submit"]').disabled = false;
-                }
-            };
-
-            reader.onerror = (error) => {
-                console.error('Error reading file:', error);
-                paymentMessage.textContent = 'ไม่สามารถอ่านไฟล์สลิปได้';
+                console.error('Network error during payment confirmation:', error);
+                paymentMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message;
                 paymentMessage.style.color = 'red';
+            } finally {
                 paymentLoading.style.display = 'none';
                 document.querySelector('#paymentForm button[type="submit"]').disabled = false;
-            };
-        });
+            }
+        };
 
         // Preview payment slip image
         paymentSlipInput.addEventListener('change', function() {
